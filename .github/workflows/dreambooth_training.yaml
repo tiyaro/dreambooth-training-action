@@ -1,0 +1,62 @@
+name: Train your Dreambooth model
+
+# This workflow is triggered manually from the GitHub website.
+# To run it, click the "Actions" tab on the repo page.
+on:
+  workflow_dispatch:
+    inputs:
+      model-name:
+        required: true
+        description: The name of the retrained dreambooth model on Tiyaro.
+        default: dreambooth-github-action
+      instance-prompt:
+        required: true
+        description: The prompt with identifier specifying the instance concept you want your base stable diffusion model to train on. For ex- `photo of xyz person`.  You'll then use this `xyz` like `a photo of xyz flying on a dragon` as a prompt to generate image using your model.
+      class-prompt:
+        required: true
+        description: The prompt to specify images in the same class (concept) as provided instance images. For ex- `photo of a person`
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    # Create your Tiyaro API key at https://console.tiyaro.ai/apikeys
+    env:
+      TIYARO_API_KEY: ${{ secrets.TIYARO_API_KEY }}
+    steps:
+
+      - name: Validate TIYARO_API_KEY
+        if: ${{ env.TIYARO_API_KEY == '' }}
+        run: |
+          echo "Missing repository secret: TIYARO_API_KEY"
+          echo "Go to https://console.tiyaro.ai/apikeys to create your API key,"
+          echo "then visit https://github.com/${{ github.repository }}/settings/secrets/actions/new to set it."
+          echo 
+          exit 1
+    
+      - name: checkout code
+        uses: actions/checkout@v3
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9' # install the python version needed
+          
+      - name: install python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: prepare training data
+        run: |
+          pushd data
+          zip -r ../input.zip *
+          popd
+
+      - name: start dreambooth training # run main.py
+        run: python main.py '${{ inputs.model-name }}' '${{ inputs.instance-prompt }}' '${{ inputs.class-prompt }}'
+
+      - name: training job details
+        run: |
+          echo "Model training takes 20-40 mins, depending on training params.."
+          echo "You can see all your trining jobs, and the current one here: https://console.tiyaro.ai/modelstudio-train"
+          echo "You'll also receive an email with details once your job is completed"
