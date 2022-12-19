@@ -1,4 +1,4 @@
-# DreamBooth Training Action
+# DreamBooth Training Action Template
 
 This is a template repo for **training and publishing your own custom [Stable Diffusion Dreambooth](https://console.tiyaro.ai/explore/dreambooth-base/) model** using Tiyaro and GitHub Actions.
 
